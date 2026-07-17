@@ -1,10 +1,21 @@
 import { supabase } from "@/lib/supabase";
 
+type VideoWithChannel = {
+  id: string;
+  title: string;
+  url: string;
+  thumbnail_url: string | null;
+  published_at: string;
+  view_count: number | null;
+  channels: { name: string } | null;
+};
+
 export default async function Home() {
   const { data: videos, error } = await supabase
     .from("videos")
     .select("id, title, url, thumbnail_url, published_at, view_count, channels(name)")
-    .order("published_at", { ascending: false });
+    .order("published_at", { ascending: false })
+    .returns<VideoWithChannel[]>();
 
   if (error) {
     return <div>エラーが発生しました: {error.message}</div>;
