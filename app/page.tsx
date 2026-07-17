@@ -22,18 +22,28 @@ export default async function Home() {
   }
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>動画一覧</h1>
-      {videos?.map((video) => (
-        <div key={video.id} style={{ marginBottom: "20px" }}>
-          <img src={video.thumbnail_url ?? ""} alt={video.title} width={320} />
-          <p>{video.title}</p>
-          <p>{video.channels?.name}</p>
-          <p>投稿日: {new Date(video.published_at).toLocaleDateString()}</p>
-          <p>再生回数: {video.view_count}</p>
-          <a href={video.url} target="_blank">動画を見る</a>
-        </div>
-      ))}
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">動画一覧</h1>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {videos?.map((video) => (
+          <a key={video.id} href={video.url} target="_blank">
+            <img
+              src={video.thumbnail_url ?? ""}
+              alt={video.title}
+              className="w-full aspect-video object-cover rounded-lg"
+            />
+            <p className="font-semibold mt-2">{video.title}</p>
+            <p className="text-sm text-gray-500">{video.channels?.name}</p>
+            <p className="text-sm text-gray-500">
+              投稿日: {new Date(video.published_at).toLocaleDateString()}
+            </p>
+            <p className="text-sm text-gray-500">
+              再生回数: {video.view_count?.toLocaleString()}
+            </p>
+          </a>
+        ))}
+      </div>
     </div>
   );
 }
