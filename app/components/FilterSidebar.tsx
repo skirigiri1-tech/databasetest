@@ -16,13 +16,9 @@ const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 
 const VIEW_COUNT_OPTIONS = [
   { label: "100万", value: "1000000" },
-  { label: "50万", value: "500000" }, 
-  { label: "10万", value: "100000" },  
+  { label: "50万", value: "500000" },
+  { label: "10万", value: "100000" },
   { label: "未設定", value: "" },
-
- 
-
-
 ];
 
 // "2024-03-05" のような文字列を { year, month, day } に分解する
@@ -150,6 +146,8 @@ export default function FilterSidebar({
   maxViewCount,
   onChangeMinViewCount,
   onChangeMaxViewCount,
+  searchKeyword,
+  onChangeSearchKeyword,
 }: {
   channels: Channel[];
   selectedChannelIds: string[];
@@ -162,11 +160,15 @@ export default function FilterSidebar({
   maxViewCount: string;
   onChangeMinViewCount: (value: string) => void;
   onChangeMaxViewCount: (value: string) => void;
+  searchKeyword: string;
+  onChangeSearchKeyword: (value: string) => void;
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSearchSectionOpen, setIsSearchSectionOpen] = useState(true);
   const [isChannelSectionOpen, setIsChannelSectionOpen] = useState(true);
   const [isDateSectionOpen, setIsDateSectionOpen] = useState(true);
   const [isViewCountSectionOpen, setIsViewCountSectionOpen] = useState(true);
+  
 
   if (!isSidebarOpen) {
     return (
@@ -190,6 +192,36 @@ export default function FilterSidebar({
           閉じる ◀
         </button>
       </div>
+
+      <div className="border-b pb-3 mb-3">
+  <button
+    onClick={() => setIsSearchSectionOpen(!isSearchSectionOpen)}
+    className="w-full flex items-center justify-between font-semibold mb-2 p-2 rounded-md hover:bg-gray-100"
+  >
+    文字検索
+    <span>{isSearchSectionOpen ? "▲" : "▼"}</span>
+  </button>
+
+  {isSearchSectionOpen && (
+    <div className="px-2">
+      <div className="relative">
+  <input
+    type="text"
+    value={searchKeyword}
+    onChange={(e) => onChangeSearchKeyword(e.target.value)}
+    placeholder="タイトルを検索"
+    className="w-full border rounded-md p-2 pr-8 text-sm hover:bg-gray-100 focus:bg-white"
+  />
+  <button
+    onClick={() => onChangeSearchKeyword("")}
+    className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-200"
+  >
+    ×
+  </button>
+</div>
+    </div>
+  )}
+</div>
 
       <div className="border-b pb-3 mb-3">
         <button
@@ -256,7 +288,6 @@ export default function FilterSidebar({
 
         {isViewCountSectionOpen && (
           <div className="flex flex-col gap-3 px-2">
-            
             <ViewCountSelector
               label="最大値"
               value={maxViewCount}

@@ -28,6 +28,8 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
   const [endDate, setEndDate] = useState("");
   const [minViewCount, setMinViewCount] = useState("");
   const [maxViewCount, setMaxViewCount] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [videos, setVideos] = useState<VideoWithChannel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -43,6 +45,14 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
         : [...prev, channelId]
     );
   }
+
+  // 検索入力は400ミリ秒待ってから実際の検索に反映する(打つたびに通信しないようにするため)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchKeyword(searchInput);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   function buildQuery(pageIndex: number) {
     let query = supabase
@@ -73,6 +83,10 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
       query = query.lte("view_count", Number(maxViewCount));
     }
 
+    if (searchKeyword) {
+      query = query.ilike("title", `%${searchKeyword}%`);
+    }
+
     return query;
   }
 
@@ -97,7 +111,7 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedChannelIds, startDate, endDate, minViewCount, maxViewCount]);
+  }, [selectedChannelIds, startDate, endDate, minViewCount, maxViewCount, searchKeyword]);
 
   const loadMore = useCallback(async () => {
     setIsLoadingMore((currentlyLoading) => {
@@ -165,6 +179,8 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
         maxViewCount={maxViewCount}
         onChangeMinViewCount={setMinViewCount}
         onChangeMaxViewCount={setMaxViewCount}
+        searchKeyword={searchInput}
+        onChangeSearchKeyword={setSearchInput}
       />
 
       <main className="flex-1 p-6">
