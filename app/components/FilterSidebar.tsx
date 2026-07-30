@@ -7,6 +7,99 @@ type Channel = {
   name: string;
 };
 
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = Array.from(
+  { length: CURRENT_YEAR - 2014 + 1 },
+  (_, i) => 2014 + i
+);
+const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
+
+// "2024-03-05" のような文字列を { year, month, day } に分解する
+function parseDate(value: string) {
+  if (!value) return { year: "", month: "", day: "" };
+  const [year, month, day] = value.split("-");
+  return { year, month, day };
+}
+
+// year, month, day から "2024-03-05" のような文字列を組み立てる
+function combineDate(year: string, month: string, day: string) {
+  if (!year || !month || !day) return "";
+  return `${year}-${month}-${day}`;
+}
+
+// 指定した年・月の日数を求める(2月28/29日などのズレを防ぐため)
+function daysInMonth(year: string, month: string) {
+  if (!year || !month) return 31;
+  return new Date(Number(year), Number(month), 0).getDate();
+}
+
+function DateSelector({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const { year, month, day } = parseDate(value);
+  const dayOptions = Array.from(
+    { length: daysInMonth(year, month) },
+    (_, i) => i + 1
+  );
+
+  function update(newYear: string, newMonth: string, newDay: string) {
+    onChange(combineDate(newYear, newMonth, newDay));
+  }
+
+  const selectClassName =
+  "flex-1 border rounded-md p-1 pl-3 text-sm text-center appearance-none bg-white hover:bg-gray-100";
+
+  return (
+    <div className="text-sm text-gray-600">
+      <p className="mb-1">{label}</p>
+      <div className="flex gap-1">
+        <select
+          value={year}
+          onChange={(e) => update(e.target.value, month, day)}
+          className={selectClassName}
+        >
+          <option value="">年</option>
+          {YEAR_OPTIONS.map((y) => (
+            <option key={y} value={String(y)}>
+              {y}
+            </option>
+          ))}
+        </select>
+        <select
+          value={month}
+          onChange={(e) => update(year, e.target.value, day)}
+          className={selectClassName}
+        >
+          <option value="">月</option>
+          {MONTH_OPTIONS.map((m) => (
+            <option key={m} value={String(m).padStart(2, "0")}>
+              {m}
+            </option>
+          ))}
+        </select>
+        <select
+          value={day}
+          onChange={(e) => update(year, month, e.target.value)}
+          className={selectClassName}
+        >
+          <option value="">日</option>
+          {dayOptions.map((d) => (
+            <option key={d} value={String(d).padStart(2, "0")}>
+              {d}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 export default function FilterSidebar({
   channels,
   selectedChannelIds,
@@ -89,38 +182,20 @@ export default function FilterSidebar({
         </button>
 
         {isDateSectionOpen && (
-  <div className="flex flex-col gap-2 px-2">
-    <label className="text-sm text-gray-600 p-1 rounded-md hover:bg-gray-100">
-      開始日
-      <input
-        type="date"
-        value={startDate}
-        onChange={(e) => onChangeStartDate(e.target.value)}
-        className="w-full border rounded-md p-1 mt-1 text-sm hover:bg-gray-100"
-      />
-    </label>
-    <label className="text-sm text-gray-600 p-1 rounded-md hover:bg-gray-100">
-      終了日
-      <input
-        type="date"
-        value={endDate}
-        onChange={(e) => onChangeEndDate(e.target.value)}
-        className="w-full border rounded-md p-1 mt-1 text-sm hover:bg-gray-100"
-      />
-    </label>
-    {(startDate || endDate) && (
-  <button
-    onClick={() => {
-      onChangeStartDate("");
-      onChangeEndDate("");
-    }}
-    className="text-xs text-gray-500 mt-1 self-start p-1 rounded-md hover:bg-gray-100"
-  >
-    期間をクリア
-  </button>
-)}
-  </div>
-)}
+          <div className="flex flex-col gap-3 px-2">
+            <DateSelector label="開始日" value={startDate} onChange={onChangeStartDate} />
+            <DateSelector label="終了日" value={endDate} onChange={onChangeEndDate} />
+            <button
+              onClick={() => {
+                onChangeStartDate("2014-01-01");
+                onChangeEndDate("");
+              }}
+              className="text-xs text-gray-500 mt-1 self-start p-1 rounded-md hover:bg-gray-100"
+            >
+              期間をクリア
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   );

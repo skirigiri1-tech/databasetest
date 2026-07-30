@@ -24,7 +24,7 @@ const PAGE_SIZE = 60;
 
 export default function VideoBrowser({ channels }: { channels: Channel[] }) {
   const [selectedChannelIds, setSelectedChannelIds] = useState<string[]>([]);
-  const [startDate, setStartDate] = useState("");
+  const [startDate, setStartDate] = useState("2014-01-01");
   const [endDate, setEndDate] = useState("");
   const [videos, setVideos] = useState<VideoWithChannel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
