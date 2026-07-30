@@ -25,7 +25,7 @@ export default async function Home() {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">動画一覧</h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6 gap-6">
         {videos?.map((video) => (
           <a key={video.id} href={video.url} target="_blank">
             <img
