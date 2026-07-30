@@ -14,6 +14,17 @@ const YEAR_OPTIONS = Array.from(
 );
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 
+const VIEW_COUNT_OPTIONS = [
+  { label: "100万", value: "1000000" },
+  { label: "50万", value: "500000" }, 
+  { label: "10万", value: "100000" },  
+  { label: "未設定", value: "" },
+
+ 
+
+
+];
+
 // "2024-03-05" のような文字列を { year, month, day } に分解する
 function parseDate(value: string) {
   if (!value) return { year: "", month: "", day: "" };
@@ -53,7 +64,7 @@ function DateSelector({
   }
 
   const selectClassName =
-  "flex-1 border rounded-md p-1 pl-3 text-sm text-center appearance-none bg-white hover:bg-gray-100";
+    "flex-1 border rounded-md p-1 pl-3 text-sm text-center appearance-none bg-white hover:bg-gray-100";
 
   return (
     <div className="text-sm text-gray-600">
@@ -100,6 +111,33 @@ function DateSelector({
   );
 }
 
+function ViewCountSelector({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="text-sm text-gray-600">
+      <p className="mb-1">{label}</p>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full border rounded-md p-1 text-sm text-center appearance-none bg-white hover:bg-gray-100"
+      >
+        {VIEW_COUNT_OPTIONS.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 export default function FilterSidebar({
   channels,
   selectedChannelIds,
@@ -108,6 +146,10 @@ export default function FilterSidebar({
   endDate,
   onChangeStartDate,
   onChangeEndDate,
+  minViewCount,
+  maxViewCount,
+  onChangeMinViewCount,
+  onChangeMaxViewCount,
 }: {
   channels: Channel[];
   selectedChannelIds: string[];
@@ -116,10 +158,15 @@ export default function FilterSidebar({
   endDate: string;
   onChangeStartDate: (value: string) => void;
   onChangeEndDate: (value: string) => void;
+  minViewCount: string;
+  maxViewCount: string;
+  onChangeMinViewCount: (value: string) => void;
+  onChangeMaxViewCount: (value: string) => void;
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isChannelSectionOpen, setIsChannelSectionOpen] = useState(true);
   const [isDateSectionOpen, setIsDateSectionOpen] = useState(true);
+  const [isViewCountSectionOpen, setIsViewCountSectionOpen] = useState(true);
 
   if (!isSidebarOpen) {
     return (
@@ -193,6 +240,41 @@ export default function FilterSidebar({
               className="text-xs text-gray-500 mt-1 self-start p-1 rounded-md hover:bg-gray-100"
             >
               期間をクリア
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="border-b pb-3 mb-3">
+        <button
+          onClick={() => setIsViewCountSectionOpen(!isViewCountSectionOpen)}
+          className="w-full flex items-center justify-between font-semibold mb-2 p-2 rounded-md hover:bg-gray-100"
+        >
+          再生回数
+          <span>{isViewCountSectionOpen ? "▲" : "▼"}</span>
+        </button>
+
+        {isViewCountSectionOpen && (
+          <div className="flex flex-col gap-3 px-2">
+            
+            <ViewCountSelector
+              label="最大値"
+              value={maxViewCount}
+              onChange={onChangeMaxViewCount}
+            />
+            <ViewCountSelector
+              label="最小値"
+              value={minViewCount}
+              onChange={onChangeMinViewCount}
+            />
+            <button
+              onClick={() => {
+                onChangeMinViewCount("");
+                onChangeMaxViewCount("");
+              }}
+              className="text-xs text-gray-500 mt-1 self-start p-1 rounded-md hover:bg-gray-100"
+            >
+              再生回数をクリア
             </button>
           </div>
         )}

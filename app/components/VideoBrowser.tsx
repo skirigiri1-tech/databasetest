@@ -26,6 +26,8 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
   const [selectedChannelIds, setSelectedChannelIds] = useState<string[]>([]);
   const [startDate, setStartDate] = useState("2014-01-01");
   const [endDate, setEndDate] = useState("");
+  const [minViewCount, setMinViewCount] = useState("");
+  const [maxViewCount, setMaxViewCount] = useState("");
   const [videos, setVideos] = useState<VideoWithChannel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -63,10 +65,18 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
       query = query.lte("published_at", `${endDate}T23:59:59`);
     }
 
+    if (minViewCount) {
+      query = query.gte("view_count", Number(minViewCount));
+    }
+
+    if (maxViewCount) {
+      query = query.lte("view_count", Number(maxViewCount));
+    }
+
     return query;
   }
 
-  // 絞り込み条件(チャンネル・期間)が変わるたびに、1ページ目から取得し直す
+  // 絞り込み条件が変わるたびに、1ページ目から取得し直す
   useEffect(() => {
     let cancelled = false;
 
@@ -87,7 +97,7 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedChannelIds, startDate, endDate]);
+  }, [selectedChannelIds, startDate, endDate, minViewCount, maxViewCount]);
 
   const loadMore = useCallback(async () => {
     setIsLoadingMore((currentlyLoading) => {
@@ -151,6 +161,10 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
         endDate={endDate}
         onChangeStartDate={setStartDate}
         onChangeEndDate={setEndDate}
+        minViewCount={minViewCount}
+        maxViewCount={maxViewCount}
+        onChangeMinViewCount={setMinViewCount}
+        onChangeMaxViewCount={setMaxViewCount}
       />
 
       <main className="flex-1 p-6">
