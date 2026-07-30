@@ -10,7 +10,7 @@ type Channel = {
 const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_OPTIONS = Array.from(
   { length: CURRENT_YEAR - 2014 + 1 },
-  (_, i) => 2014 + i
+  (_, i) => CURRENT_YEAR - i
 );
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 
