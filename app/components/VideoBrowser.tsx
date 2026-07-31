@@ -12,7 +12,7 @@ type VideoWithChannel = {
   published_at: string;
   view_count: number | null;
   channel_id: string;
-  channels: { name: string } | null;
+  channels: { name: string; thumbnail_url: string | null } | null;
 };
 
 type Channel = {
@@ -21,6 +21,21 @@ type Channel = {
 };
 
 const PAGE_SIZE = 60;
+
+// "2026-07-30T12:00:00" のような日時を "2026/07" の形式にする
+function formatYearMonth(dateStr: string) {
+  const date = new Date(dateStr);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${year}/${month}`;
+}
+
+// 再生回数を1万単位に丸めて「〇〇万」の形式にする
+function formatViewCount(count: number | null) {
+  if (count === null || count === undefined) return "-";
+  const man = Math.floor(count / 10000);
+  return `${man}万`;
+}
 
 export default function VideoBrowser({ channels }: { channels: Channel[] }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -59,7 +74,7 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
     let query = supabase
       .from("videos")
       .select(
-        "id, title, url, thumbnail_url, published_at, view_count, channel_id, channels(name)"
+        "id, title, url, thumbnail_url, published_at, view_count, channel_id, channels(name, thumbnail_url)"
       )
       .range(pageIndex * PAGE_SIZE, pageIndex * PAGE_SIZE + PAGE_SIZE - 1);
 
@@ -230,14 +245,41 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
                       alt={video.title}
                       className="w-full aspect-video object-cover rounded-lg"
                     />
-                    <p className="font-semibold mt-2">{video.title}</p>
-                    <p className="text-sm text-gray-500">{video.channels?.name}</p>
-                    <p className="text-sm text-gray-500">
-                      投稿日: {new Date(video.published_at).toLocaleDateString()}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      再生回数: {video.view_count?.toLocaleString()}
-                    </p>
+                    <div className="relative group flex gap-2 mt-2">
+                      {video.channels?.thumbnail_url ? (
+                        <img
+                          src={video.channels.thumbnail_url}
+                          alt={video.channels.name}
+                          className="w-7 h-7 rounded-full object-cover shrink-0 bg-gray-200"
+                        />
+                      ) : (
+                        <div className="w-7 h-7 rounded-full shrink-0 bg-gray-200" />
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm line-clamp-2">
+                          {video.title}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {formatYearMonth(video.published_at)} ・{" "}
+                          {formatViewCount(video.view_count)}回視聴
+                        </p>
+                      </div>
+
+                      {/* 0.3秒ホバーした後に表示される、正確な情報のカード */}
+                      <div className="absolute top-0 left-0 right-0 z-30 bg-white border rounded-md shadow-lg p-3 opacity-0 pointer-events-none transition-opacity duration-150 group-hover:opacity-100 group-hover:delay-200">
+                        <p className="font-semibold text-sm">{video.title}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {video.channels?.name}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          投稿日:{" "}
+                          {new Date(video.published_at).toLocaleDateString()}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          再生回数: {video.view_count?.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
                   </a>
                 ))}
               </div>

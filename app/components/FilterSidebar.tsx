@@ -170,68 +170,47 @@ export default function FilterSidebar({
   sortOrder: string;
   onChangeSortOrder: (value: string) => void;
 }) {
-  const [isSortSectionOpen, setIsSortSectionOpen] = useState(true);
-  const [isSearchSectionOpen, setIsSearchSectionOpen] = useState(true);
   const [isChannelSectionOpen, setIsChannelSectionOpen] = useState(true);
   const [isDateSectionOpen, setIsDateSectionOpen] = useState(true);
   const [isViewCountSectionOpen, setIsViewCountSectionOpen] = useState(true);
 
   return (
-    <aside className="w-64 border-r p-4 shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
+    <aside className="w-64 border-r p-4 shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto  overscroll-contain">
       <div className="border-b pb-3 mb-3">
-        <button
-          onClick={() => setIsSortSectionOpen(!isSortSectionOpen)}
-          className="w-full flex items-center justify-between font-semibold mb-2 p-2 rounded-md hover:bg-gray-100"
-        >
-          並べ替え
-          <span>{isSortSectionOpen ? "▲" : "▼"}</span>
-        </button>
-
-        {isSortSectionOpen && (
-          <div className="px-2">
-            <select
-              value={sortOrder}
-              onChange={(e) => onChangeSortOrder(e.target.value)}
-              className="w-full border rounded-md p-1 text-sm text-center appearance-none bg-white hover:bg-gray-100"
-            >
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        <div className="relative">
+          <select
+            value={sortOrder}
+            onChange={(e) => onChangeSortOrder(e.target.value)}
+            className="w-full border rounded-md p-2 pr-8 text-sm text-center appearance-none bg-white hover:bg-gray-100"
+          >
+            {SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+            ∨
+          </span>
+        </div>
       </div>
 
       <div className="border-b pb-3 mb-3">
-        <button
-          onClick={() => setIsSearchSectionOpen(!isSearchSectionOpen)}
-          className="w-full flex items-center justify-between font-semibold mb-2 p-2 rounded-md hover:bg-gray-100"
-        >
-          文字検索
-          <span>{isSearchSectionOpen ? "▲" : "▼"}</span>
-        </button>
-
-        {isSearchSectionOpen && (
-          <div className="px-2">
-            <div className="relative">
-              <input
-                type="text"
-                value={searchKeyword}
-                onChange={(e) => onChangeSearchKeyword(e.target.value)}
-                placeholder="タイトルを検索"
-                className="w-full border rounded-md p-2 pr-8 text-sm hover:bg-gray-100 focus:bg-white"
-              />
-              <button
-                onClick={() => onChangeSearchKeyword("")}
-                className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-200"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        )}
+        <div className="relative">
+          <input
+            type="text"
+            value={searchKeyword}
+            onChange={(e) => onChangeSearchKeyword(e.target.value)}
+            placeholder="タイトルを検索"
+            className="w-full border rounded-md p-2 pr-8 text-sm hover:bg-gray-100 focus:bg-white"
+          />
+          <button
+            onClick={() => onChangeSearchKeyword("")}
+            className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-200"
+          >
+            ×
+          </button>
+        </div>
       </div>
 
       <div className="border-b pb-3 mb-3">
