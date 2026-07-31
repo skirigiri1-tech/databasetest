@@ -23,6 +23,7 @@ type Channel = {
 const PAGE_SIZE = 60;
 
 export default function VideoBrowser({ channels }: { channels: Channel[] }) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedChannelIds, setSelectedChannelIds] = useState<string[]>([]);
   const [startDate, setStartDate] = useState("2014-01-01");
   const [endDate, setEndDate] = useState("");
@@ -30,6 +31,7 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
   const [maxViewCount, setMaxViewCount] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [sortOrder, setSortOrder] = useState("newest");
   const [videos, setVideos] = useState<VideoWithChannel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -46,7 +48,6 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
     );
   }
 
-  // 検索入力は400ミリ秒待ってから実際の検索に反映する(打つたびに通信しないようにするため)
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearchKeyword(searchInput);
@@ -60,8 +61,15 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
       .select(
         "id, title, url, thumbnail_url, published_at, view_count, channel_id, channels(name)"
       )
-      .order("published_at", { ascending: false })
       .range(pageIndex * PAGE_SIZE, pageIndex * PAGE_SIZE + PAGE_SIZE - 1);
+
+    if (sortOrder === "oldest") {
+      query = query.order("published_at", { ascending: true });
+    } else if (sortOrder === "views") {
+      query = query.order("view_count", { ascending: false });
+    } else {
+      query = query.order("published_at", { ascending: false });
+    }
 
     if (selectedChannelIds.length > 0) {
       query = query.in("channel_id", selectedChannelIds);
@@ -90,7 +98,6 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
     return query;
   }
 
-  // 絞り込み条件が変わるたびに、1ページ目から取得し直す
   useEffect(() => {
     let cancelled = false;
 
@@ -111,16 +118,23 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedChannelIds, startDate, endDate, minViewCount, maxViewCount, searchKeyword]);
+  }, [
+    selectedChannelIds,
+    startDate,
+    endDate,
+    minViewCount,
+    maxViewCount,
+    searchKeyword,
+    sortOrder,
+  ]);
 
   const loadMore = useCallback(async () => {
     setIsLoadingMore((currentlyLoading) => {
-      if (currentlyLoading) return currentlyLoading; // 二重読み込みを防ぐ
+      if (currentlyLoading) return currentlyLoading;
       return true;
     });
   }, []);
 
-  // isLoadingMoreがtrueになったタイミングで実際に取得する
   useEffect(() => {
     if (!isLoadingMore) return;
 
@@ -145,7 +159,6 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoadingMore]);
 
-  // 末尾の目印(sentinel)を監視し、画面に近づいたら自動で追加読み込みする
   useEffect(() => {
     if (!hasMore || isLoading) return;
 
@@ -166,63 +179,78 @@ export default function VideoBrowser({ channels }: { channels: Channel[] }) {
   }, [hasMore, isLoading, loadMore]);
 
   return (
-    <div className="flex">
-      <FilterSidebar
-        channels={channels}
-        selectedChannelIds={selectedChannelIds}
-        onToggleChannel={toggleChannel}
-        startDate={startDate}
-        endDate={endDate}
-        onChangeStartDate={setStartDate}
-        onChangeEndDate={setEndDate}
-        minViewCount={minViewCount}
-        maxViewCount={maxViewCount}
-        onChangeMinViewCount={setMinViewCount}
-        onChangeMaxViewCount={setMaxViewCount}
-        searchKeyword={searchInput}
-        onChangeSearchKeyword={setSearchInput}
-      />
+    <div>
+      <header className="h-16 flex items-center gap-3 px-4 border-b sticky top-0 bg-white z-20">
+        <button
+          onClick={() => setIsSidebarOpen((prev) => !prev)}
+          className="text-2xl leading-none p-2 rounded-md hover:bg-gray-100"
+          aria-label="サイドバーの開閉"
+        >
+          ≡
+        </button>
+        <h1 className="text-2xl font-bold">テスト版</h1>
+      </header>
 
-      <main className="flex-1 p-6">
-        <h1 className="text-2xl font-bold mb-6">テスト版</h1>
-
-        {isLoading ? (
-          <p className="text-gray-500">読み込み中...</p>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6 gap-1">
-              {videos.map((video) => (
-                <a
-                  key={video.id}
-                  href={video.url}
-                  target="_blank"
-                  className="block p-2 rounded-md hover:bg-gray-100"
-                >
-                  <img
-                    src={video.thumbnail_url ?? ""}
-                    alt={video.title}
-                    className="w-full aspect-video object-cover rounded-lg"
-                  />
-                  <p className="font-semibold mt-2">{video.title}</p>
-                  <p className="text-sm text-gray-500">{video.channels?.name}</p>
-                  <p className="text-sm text-gray-500">
-                    投稿日: {new Date(video.published_at).toLocaleDateString()}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    再生回数: {video.view_count?.toLocaleString()}
-                  </p>
-                </a>
-              ))}
-            </div>
-
-            <div ref={sentinelRef} className="h-1" />
-
-            {isLoadingMore && (
-              <p className="text-center text-gray-500 mt-4">読み込み中...</p>
-            )}
-          </>
+      <div className="flex">
+        {isSidebarOpen && (
+          <FilterSidebar
+            channels={channels}
+            selectedChannelIds={selectedChannelIds}
+            onToggleChannel={toggleChannel}
+            startDate={startDate}
+            endDate={endDate}
+            onChangeStartDate={setStartDate}
+            onChangeEndDate={setEndDate}
+            minViewCount={minViewCount}
+            maxViewCount={maxViewCount}
+            onChangeMinViewCount={setMinViewCount}
+            onChangeMaxViewCount={setMaxViewCount}
+            searchKeyword={searchInput}
+            onChangeSearchKeyword={setSearchInput}
+            sortOrder={sortOrder}
+            onChangeSortOrder={setSortOrder}
+          />
         )}
-      </main>
+
+        <main className="flex-1 p-6">
+          {isLoading ? (
+            <p className="text-gray-500">読み込み中...</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6 gap-1">
+                {videos.map((video) => (
+                  <a
+                    key={video.id}
+                    href={video.url}
+                    target="_blank"
+                    className="block p-2 rounded-md hover:bg-gray-100"
+                  >
+                    <img
+                      src={video.thumbnail_url ?? ""}
+                      alt={video.title}
+                      className="w-full aspect-video object-cover rounded-lg"
+                    />
+                    <p className="font-semibold mt-2">{video.title}</p>
+                    <p className="text-sm text-gray-500">{video.channels?.name}</p>
+                    <p className="text-sm text-gray-500">
+                      投稿日: {new Date(video.published_at).toLocaleDateString()}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      再生回数: {video.view_count?.toLocaleString()}
+                    </p>
+                  </a>
+                ))}
+              </div>
+
+              <div ref={sentinelRef} className="h-1" />
+
+              {isLoadingMore && (
+                <p className="text-center text-gray-500 mt-4">読み込み中...</p>
+              )}
+            </>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

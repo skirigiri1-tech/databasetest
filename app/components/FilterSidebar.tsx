@@ -21,20 +21,23 @@ const VIEW_COUNT_OPTIONS = [
   { label: "未設定", value: "" },
 ];
 
-// "2024-03-05" のような文字列を { year, month, day } に分解する
+const SORT_OPTIONS = [
+  { label: "新しい順", value: "newest" },
+  { label: "古い順", value: "oldest" },
+  { label: "再生回数順", value: "views" },
+];
+
 function parseDate(value: string) {
   if (!value) return { year: "", month: "", day: "" };
   const [year, month, day] = value.split("-");
   return { year, month, day };
 }
 
-// year, month, day から "2024-03-05" のような文字列を組み立てる
 function combineDate(year: string, month: string, day: string) {
   if (!year || !month || !day) return "";
   return `${year}-${month}-${day}`;
 }
 
-// 指定した年・月の日数を求める(2月28/29日などのズレを防ぐため)
 function daysInMonth(year: string, month: string) {
   if (!year || !month) return 31;
   return new Date(Number(year), Number(month), 0).getDate();
@@ -148,6 +151,8 @@ export default function FilterSidebar({
   onChangeMaxViewCount,
   searchKeyword,
   onChangeSearchKeyword,
+  sortOrder,
+  onChangeSortOrder,
 }: {
   channels: Channel[];
   selectedChannelIds: string[];
@@ -162,66 +167,72 @@ export default function FilterSidebar({
   onChangeMaxViewCount: (value: string) => void;
   searchKeyword: string;
   onChangeSearchKeyword: (value: string) => void;
+  sortOrder: string;
+  onChangeSortOrder: (value: string) => void;
 }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSortSectionOpen, setIsSortSectionOpen] = useState(true);
   const [isSearchSectionOpen, setIsSearchSectionOpen] = useState(true);
   const [isChannelSectionOpen, setIsChannelSectionOpen] = useState(true);
   const [isDateSectionOpen, setIsDateSectionOpen] = useState(true);
   const [isViewCountSectionOpen, setIsViewCountSectionOpen] = useState(true);
-  
-
-  if (!isSidebarOpen) {
-    return (
-      <button
-        onClick={() => setIsSidebarOpen(true)}
-        className="p-3 text-sm text-gray-600 border-r h-screen sticky top-0 hover:bg-gray-100"
-      >
-        絞り込み ▶
-      </button>
-    );
-  }
 
   return (
-    <aside className="w-64 border-r p-4 shrink-0 sticky top-0 h-screen overflow-y-auto">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-bold">絞り込み</h2>
+    <aside className="w-64 border-r p-4 shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
+      <div className="border-b pb-3 mb-3">
         <button
-          onClick={() => setIsSidebarOpen(false)}
-          className="text-sm text-gray-500 p-2 rounded-md hover:bg-gray-100"
+          onClick={() => setIsSortSectionOpen(!isSortSectionOpen)}
+          className="w-full flex items-center justify-between font-semibold mb-2 p-2 rounded-md hover:bg-gray-100"
         >
-          閉じる ◀
+          並べ替え
+          <span>{isSortSectionOpen ? "▲" : "▼"}</span>
         </button>
+
+        {isSortSectionOpen && (
+          <div className="px-2">
+            <select
+              value={sortOrder}
+              onChange={(e) => onChangeSortOrder(e.target.value)}
+              className="w-full border rounded-md p-1 text-sm text-center appearance-none bg-white hover:bg-gray-100"
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="border-b pb-3 mb-3">
-  <button
-    onClick={() => setIsSearchSectionOpen(!isSearchSectionOpen)}
-    className="w-full flex items-center justify-between font-semibold mb-2 p-2 rounded-md hover:bg-gray-100"
-  >
-    文字検索
-    <span>{isSearchSectionOpen ? "▲" : "▼"}</span>
-  </button>
+        <button
+          onClick={() => setIsSearchSectionOpen(!isSearchSectionOpen)}
+          className="w-full flex items-center justify-between font-semibold mb-2 p-2 rounded-md hover:bg-gray-100"
+        >
+          文字検索
+          <span>{isSearchSectionOpen ? "▲" : "▼"}</span>
+        </button>
 
-  {isSearchSectionOpen && (
-    <div className="px-2">
-      <div className="relative">
-  <input
-    type="text"
-    value={searchKeyword}
-    onChange={(e) => onChangeSearchKeyword(e.target.value)}
-    placeholder="タイトルを検索"
-    className="w-full border rounded-md p-2 pr-8 text-sm hover:bg-gray-100 focus:bg-white"
-  />
-  <button
-    onClick={() => onChangeSearchKeyword("")}
-    className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-200"
-  >
-    ×
-  </button>
-</div>
-    </div>
-  )}
-</div>
+        {isSearchSectionOpen && (
+          <div className="px-2">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchKeyword}
+                onChange={(e) => onChangeSearchKeyword(e.target.value)}
+                placeholder="タイトルを検索"
+                className="w-full border rounded-md p-2 pr-8 text-sm hover:bg-gray-100 focus:bg-white"
+              />
+              <button
+                onClick={() => onChangeSearchKeyword("")}
+                className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-200"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="border-b pb-3 mb-3">
         <button
